@@ -38,6 +38,13 @@ def change_date():
     date_text = today_date.replace('-', '.')
     return date_text
 
+# government24.py에서 3일 전 날을 얻기 위함.
+def get_3_days_ago_date():
+     today_date = get_date()
+     three_days_ago = str(today_date - timedelta(days = 3))
+     three_days_ago = three_days_ago.replace('-', '.')
+     return three_days_ago 
+
 def get_driver():
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
