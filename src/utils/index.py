@@ -19,6 +19,7 @@ def get_soup(url):
       # SSL 검증 비활성화
       requests.packages.urllib3.disable_warnings()
       res = requests.get(url, verify=False, timeout = 4000)
+      res.encoding = 'utf-8'
       if res.status_code == 200:
             return BeautifulSoup(res.text, 'html.parser')
       else:
