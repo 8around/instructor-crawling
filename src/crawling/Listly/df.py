@@ -4,10 +4,17 @@ import csv
 import io
 
 BASE_URL = "https://www.listly.io/api/single?selected=1&arrange=y&href=y&header=y&file=csv&key="
-API_KEYS = [
+
+API_KEYS_gangnam = [
     "3yIyUgDb",
     "fPR4gjCr"
 ]
+
+API_KEYS_gangseo = [
+    "YWJZFbz5",
+]
+
+API_KEYS = API_KEYS_gangnam + API_KEYS_gangseo
 
 API_TOKEN = "7YqGgH2YabaLTMMofTBzD8MocZ6rl2Oq"
 headers = {	"Authorization": API_TOKEN }
