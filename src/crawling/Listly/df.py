@@ -6,15 +6,24 @@ import io
 BASE_URL = "https://www.listly.io/api/single?selected=1&arrange=y&href=y&header=y&file=csv&key="
 
 API_KEYS_gangnam = [
-    "3yIyUgDb",
-    "fPR4gjCr"
+    "3yIyUgDb", # 강남구청 - 고시공고
+    "fPR4gjCr" # 강남구청 - 채용공고
 ]
 
 API_KEYS_gangseo = [
-    "YWJZFbz5",
+    "YWJZFbz5", # 강서구청
 ]
 
-API_KEYS = API_KEYS_gangnam + API_KEYS_gangseo
+API_KEYS_yangcheon = [
+    "TFiL1FCv", # 양천구청
+    "WmKlWMZW", # 시립청소년드림센터
+    "lRNxhyGK", # 신월청소년문화센터
+    "ZJ8wPkNR", # 신월종합사회복지관
+    "QOrTTMMj", # 양천어르신종합복지관
+    "7zCbHKcL", # 신목종합사회복지관
+]
+
+API_KEYS = API_KEYS_gangnam + API_KEYS_gangseo + API_KEYS_yangcheon
 
 API_TOKEN = "7YqGgH2YabaLTMMofTBzD8MocZ6rl2Oq"
 headers = {	"Authorization": API_TOKEN }
