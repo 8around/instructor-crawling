@@ -2,7 +2,9 @@ import requests
 import pandas as pd
 import io
 import os
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from boilerpy3 import extractors
 
 load_dotenv()
 
@@ -24,6 +26,13 @@ def fetch_data(api_keys, base_url, api_token):
         
         combined_df = pd.concat([combined_df, df], ignore_index=True)
     
+    # 데이터 검수
+    combined_df = filter_data(combined_df)
+
+    # 본문 내용 추가
+    combined_df['content'] = combined_df['link'].apply(extract_important_content)
+    
+
     return combined_df
 
 def preprocess_data(df, region):
@@ -33,9 +42,12 @@ def preprocess_data(df, region):
     
     # 컬럼 이름 변경
     df.columns = ['title', 'link', 'date']
-    
+
     # content 빈 컬럼 추가
     df['content'] = ""
+    
+    # date 컬럼 형식 변경
+    df['date'] = pd.to_datetime(df['date'], errors='coerce').dt.strftime('%Y-%m-%d')
     
     # 컬럼 순서 변경
     df = df[['title', 'content', 'date', 'link']]
@@ -45,13 +57,27 @@ def preprocess_data(df, region):
     
     return df
 
-# 날짜로 먼저 1차 검수 (1일 전까지)
+def filter_data(df):
+    today = datetime.today() - timedelta(days=19)
+    yesterday = today - timedelta(days=1)
 
+    # 날짜 필터링: 오늘 또는 하루 전인 데이터만 남김
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    df = df[(df['date'] >= yesterday) & (df['date'] <= today)]
+    
+    # 제목 필터링: "강사"와 "모집" 두 단어가 모두 포함된 경우만 남김
+    df = df[df['title'].str.contains('강사') & df['title'].str.contains('모집|채용|공고')]
+    
+    return df
 
-# 키워드로 2차 검수
+def extract_important_content(url):
+    try:
+        extractor = extractors.ArticleExtractor()
+        result = extractor.get_content_from_url(url)
 
-
-
+        return result
+    except Exception as e:
+        return ""  # 예외 발생 시 빈 본문 반환
 
 API_KEYS_gangnam = {
     "3yIyUgDb": "강남구청 - 고시공고",
