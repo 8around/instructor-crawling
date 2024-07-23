@@ -5,6 +5,7 @@ import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from boilerpy3 import extractors
+from api_keys import API_KEYS
 
 load_dotenv()
 
@@ -27,10 +28,10 @@ def fetch_data(api_keys, base_url, api_token):
         combined_df = pd.concat([combined_df, df], ignore_index=True)
     
     # 데이터 검수
-    combined_df = filter_data(combined_df)
+    #combined_df = filter_data(combined_df)
 
     # 본문 내용 추가
-    combined_df['content'] = combined_df['link'].apply(extract_important_content)
+    #combined_df['content'] = combined_df['link'].apply(extract_important_content)
     
 
     return combined_df
@@ -47,8 +48,20 @@ def preprocess_data(df, region):
     df['content'] = ""
     
     # date 컬럼 형식 변경
-    df['date'] = pd.to_datetime(df['date'], errors='coerce').dt.strftime('%Y-%m-%d')
-    
+    def add_current_year(date_str):
+        try:
+            date = pd.to_datetime(date_str, format='%Y-%m-%d', errors='coerce')
+            if pd.isnull(date):
+                date = pd.to_datetime(date_str, format='%Y.%m.%d', errors='coerce')
+            if pd.isnull(date):
+                current_year = datetime.now().year
+                date = pd.to_datetime(f"{current_year}-{date_str}", format='%Y-%m-%d', errors='coerce')
+            return date.strftime('%Y-%m-%d')
+        except Exception:
+            return None
+
+    df['date'] = df['date'].apply(add_current_year)
+
     # 컬럼 순서 변경
     df = df[['title', 'content', 'date', 'link']]
     
@@ -78,30 +91,6 @@ def extract_important_content(url):
         return result
     except Exception as e:
         return ""  # 예외 발생 시 빈 본문 반환
-
-API_KEYS_gangnam = {
-    "3yIyUgDb": "강남구청 - 고시공고",
-    "fPR4gjCr": "강남구청 - 채용공고",
-}
-
-API_KEYS_gangseo = {
-    "YWJZFbz5": "강서구청",
-}
-
-API_KEYS_yangcheon = {"TFiL1FCv": "양천구청",
-    "WmKlWMZW": "시립청소년드림센터",
-    "lRNxhyGK": "신월청소년문화센터",
-    "ZJ8wPkNR": "신월종합사회복지관",
-    "QOrTTMMj": "양천어르신종합복지관",
-    "7zCbHKcL": "신목종합사회복지관",
-}
-
-API_KEYS_gangdong = {
-    "BgzCFdJv": "강동구청",
-}
-
-
-API_KEYS = {**API_KEYS_gangnam, **API_KEYS_gangseo, **API_KEYS_yangcheon, **API_KEYS_gangdong}
 
 combined_df = fetch_data(API_KEYS, BASE_URL, API_TOKEN)
 
