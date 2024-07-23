@@ -34,10 +34,23 @@ def preprocess_data(df, region):
     # 컬럼 이름 변경
     df.columns = ['title', 'link', 'date']
     
+    # content 빈 컬럼 추가
+    df['content'] = ""
+    
+    # 컬럼 순서 변경
+    df = df[['title', 'content', 'date', 'link']]
+    
     # region 컬럼 추가
     df['region'] = region
     
     return df
+
+# 날짜로 먼저 1차 검수 (1일 전까지)
+
+
+# 키워드로 2차 검수
+
+
 
 
 API_KEYS_gangnam = {
