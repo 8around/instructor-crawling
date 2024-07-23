@@ -109,6 +109,10 @@ API_KEYS_gangdong = {
     "SwnyfuHk": "성내종합사회복지관"
 }
 
+API_KEYS_guri = {
+    "z4yGxEY0": "구리시청-모집공고"
+}
+
 API_KEYS = {**API_KEYS_gangnam, **API_KEYS_yangcheon, **API_KEYS_gangdong}
 
 combined_df = fetch_data(API_KEYS, BASE_URL, API_TOKEN)
