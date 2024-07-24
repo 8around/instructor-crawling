@@ -63,6 +63,11 @@ def preprocess_data(df, region):
             if pd.isnull(date):
                 date = pd.to_datetime(date_str, format='%Y.%m.%d', errors='coerce')
             if pd.isnull(date):
+            # "MM.DD" 형식 처리
+                if len(date_str.split('.')) == 2:
+                    current_year = datetime.now().year
+                    date = pd.to_datetime(f"{current_year}.{date_str}", format='%Y.%m.%d', errors='coerce')
+            if pd.isnull(date):
                 current_year = datetime.now().year
                 date = pd.to_datetime(f"{current_year}-{date_str}", format='%Y-%m-%d', errors='coerce')
             return date.strftime('%Y-%m-%d')
