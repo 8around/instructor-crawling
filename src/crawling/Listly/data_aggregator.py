@@ -50,6 +50,15 @@ def preprocess_data(df, region):
     # date 컬럼 형식 변경
     def add_current_year(date_str):
         try:
+            if date_str.startswith('작성일'):
+                return date_str.replace('작성일', '').strip()
+            
+            # 시간 정보만 있는 경우 처리
+            if len(date_str.split(':')) == 3:
+                current_date = datetime.now().strftime('%Y-%m-%d')
+                date_str = f"{current_date} {date_str}"
+                return pd.to_datetime(date_str, format='%Y-%m-%d %H:%M:%S', errors='coerce').strftime('%Y-%m-%d')
+
             date = pd.to_datetime(date_str, format='%Y-%m-%d', errors='coerce')
             if pd.isnull(date):
                 date = pd.to_datetime(date_str, format='%Y.%m.%d', errors='coerce')
