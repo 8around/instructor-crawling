@@ -91,7 +91,6 @@ try:
         for title, date in zip(titles, dates):
             post_list = extract_post_data(title, date, title.get('href'))
     
-    print(post_list)
     post_list = [post for post in post_list if post[2] == str(get_date())]
     post_link_filtered = [post for post in post_list if any(keyword in post[0] or keyword in post[1] for keyword in real_keywords)]
 
