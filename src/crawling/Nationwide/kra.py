@@ -4,7 +4,9 @@ import sys
 import time
 from selenium.webdriver.common.by import By
 sys.path.append("../..")  # 상위 폴더로 경로 추가
-from constants.index import real_keywords
+from constants.index import must_include_keyword
+from constants.index import must_not_include_keywords
+from constants.index import any_of_keywords
 from utils.index import get_soup
 from utils.index import get_date
 from utils.index import get_driver
@@ -12,9 +14,12 @@ from utils.index import log_error_region
 
 detail_region = '한국마사회'
 
+contents = []
+
 def get_html_tbody(page_number = 1):
     tbody_list = []
     driver = get_driver()
+    
     # 크롤링할 웹 페이지 URL
     url = "https://ccc.kra.co.kr/ccc/instruction/application/instruction_application_agreement.do"
     
@@ -89,10 +94,15 @@ try:
         for title, date in zip(titles, dates):
             post_list = extract_post_data(title, date)
     
-    print(post_list)
     post_list = [post for post in post_list if post[2] == str(get_date())]
-    post_link_filtered = [post for post in post_list if any(keyword in post[0] or keyword in post[1] for keyword in real_keywords)]
-
+    
+    post_link_filtered = [
+    post for post in post_list
+    if must_include_keyword in (post[0]) and 
+       any(keyword in (post[0]) for keyword in any_of_keywords) and 
+       not any(keyword in (post[0]) for keyword in must_not_include_keywords)
+]
+    
     for post in post_link_filtered:
         print('지역:', post[4])
         print('제목:', post[0])
