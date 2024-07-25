@@ -3,7 +3,9 @@ import re
 import sys
 import time
 sys.path.append("../..")  # 상위 폴더로 경로 추가
-from constants.index import real_keywords
+from constants.index import must_include_keyword
+from constants.index import must_not_include_keywords
+from constants.index import any_of_keywords
 from utils.index import get_soup
 from utils.index import change_date
 from utils.index import get_3_days_ago_date
@@ -17,35 +19,34 @@ def get_html_tbody2():
     ul_list = []
     driver = get_driver()
     
-    for keyword in real_keywords:
-      url = f"https://www.gov.kr/portal/locgovNews?srchOrder=&sido=&signgu=&srchArea=&srchSidoArea=&srchStDtFmt={get_3_days_ago_date()}&srchEdDtFmt={change_date()}&srchTxt={keyword}&initSrch=false"
+    url = f"https://www.gov.kr/portal/locgovNews?srchOrder=&sido=&signgu=&srchArea=&srchSidoArea=&srchStDtFmt={get_3_days_ago_date()}&srchEdDtFmt={change_date()}&srchTxt={must_include_keyword}&initSrch=false"
       
-      # 웹 페이지 열기
-      driver.get(url)
+    # 웹 페이지 열기
+    driver.get(url)
 
-      page1_source = driver.page_source
+    page1_source = driver.page_source
 
-      # BeautifulSoup으로 파싱
-      soup1 = BeautifulSoup(page1_source, 'html.parser')
+    # BeautifulSoup으로 파싱
+    soup1 = BeautifulSoup(page1_source, 'html.parser')
 
-      time.sleep(4)
+    time.sleep(4)
 
-      # tbody 요소 가져오기
-      ul = soup1.find('ul', class_='line-b')
+    # tbody 요소 가져오기
+    ul = soup1.find('ul', class_='line-b')
 
-      # tbody1과 tbody2를 리스트에 저장
-      ul_list.append(ul)
+    # tbody1과 tbody2를 리스트에 저장
+    ul_list.append(ul)
 
-      # page_number
-      page_number = soup1.find('span', class_='sum')
-      page_number = page_number.get_text(strip=True)
-      page_number = page_number.replace(',', '')  # 4자리 넘어가면 쉼표 생겨서 쉼표 제거하는 코드
-      page_number = int(page_number)
-      page_number = page_number / 10
-      page_number = math.ceil(page_number)
+    # page_number
+    page_number = soup1.find('span', class_='sum')
+    page_number = page_number.get_text(strip=True)
+    page_number = page_number.replace(',', '')  # 4자리 넘어가면 쉼표 생겨서 쉼표 제거하는 코드
+    page_number = int(page_number)
+    page_number = page_number / 10
+    page_number = math.ceil(page_number)
 
-      for i in range(2, page_number + 1):
-         url = f"https://www.gov.kr/portal/locgovNews?srchOrder=&sido=&signgu=&srchArea=&srchSidoArea=&srchStDtFmt={get_3_days_ago_date()}&srchEdDtFmt={change_date()}&srchTxt={keyword}&initSrch=false&pageIndex={i}"
+    for i in range(2, page_number + 1):
+         url = f"https://www.gov.kr/portal/locgovNews?srchOrder=&sido=&signgu=&srchArea=&srchSidoArea=&srchStDtFmt={get_3_days_ago_date()}&srchEdDtFmt={change_date()}&srchTxt={must_include_keyword}&initSrch=false&pageIndex={i}"
          driver.get(url)
 
          # 현재 페이지의 HTML 코드를 가져옵니다.
@@ -111,7 +112,7 @@ def remove_duplicate_titles(post_list):
         title = post[0]  # 제목은 리스트의 첫 번째 요소
         
         # 딕셔너리에 제목이 이미 등장한 경우 중복이므로 카운트 증가
-        if '강사' in title and '모집' in title:
+        if not any(keyword in title for keyword in must_not_include_keywords) and any(keyword in title for keyword in any_of_keywords):
             # 딕셔너리에 제목이 이미 등장한 경우 중복이므로 카운트 증가
             title_count[title] = title_count.get(title, 0) + 1
             
