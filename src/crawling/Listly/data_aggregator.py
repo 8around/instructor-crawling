@@ -12,6 +12,50 @@ load_dotenv()
 BASE_URL = os.getenv('BASE_URL')
 API_TOKEN = os.getenv('API_TOKEN')
 
+def add_current_year(date_str):
+    try:
+        if date_str.startswith('작성일'):
+            return date_str.replace('작성일', '').strip()
+        
+        # 시간 정보만 있는 경우 처리
+        if len(date_str.split(':')) == 3:
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            date_str = f"{current_date} {date_str}"
+            return pd.to_datetime(date_str, format='%Y-%m-%d %H:%M:%S', errors='coerce').strftime('%Y-%m-%d')
+
+        # 날짜 형식 변환 시도
+        date = pd.to_datetime(date_str, format='%Y-%m-%d', errors='coerce')
+
+        if pd.isnull(date):
+            date = pd.to_datetime(date_str, format='%Y.%m.%d', errors='coerce')
+
+        if pd.isnull(date):
+            # "YY.MM.DD" 형식 처리 (예: 24.05.16)
+            if len(date_str.split('.')) == 3 and len(date_str.split('.')[0]) == 2:
+                date_str = '20' + date_str
+                date = pd.to_datetime(date_str, format='%Y.%m.%d', errors='coerce')
+        
+        if pd.isnull(date):
+            # "YY-MM-DD" 형식 처리 (예: 24-05-16)
+            if len(date_str.split('-')) == 3 and len(date_str.split('-')[0]) == 2:
+                date_str = '20' + date_str
+                date = pd.to_datetime(date_str, format='%Y-%m-%d', errors='coerce')
+
+        if pd.isnull(date):
+            # "MM.DD" 형식 처리
+            if len(date_str.split('.')) == 2:
+                current_year = datetime.now().year
+                date = pd.to_datetime(f"{current_year}.{date_str}", format='%Y.%m.%d', errors='coerce')
+
+        if pd.isnull(date):
+            current_year = datetime.now().year
+            date = pd.to_datetime(f"{current_year}-{date_str}", format='%Y-%m-%d', errors='coerce')
+
+        return date.strftime('%Y-%m-%d')
+    except Exception:
+        return None
+
+
 def fetch_data(api_keys, base_url, api_token):
     headers = {"Authorization": api_token}
     combined_df = pd.DataFrame()
@@ -21,6 +65,11 @@ def fetch_data(api_keys, base_url, api_token):
         url = base_url + key
         response = requests.get(url=url, headers=headers)
         df = pd.read_csv(io.StringIO(response.text))
+
+        # 데이터프레임이 올바르게 로드되었는지 확인
+        if df.empty:
+            print(f"No data found for key: {key}")
+            continue
 
         # 데이터 전처리
         df = preprocess_data(df, region)
@@ -46,33 +95,6 @@ def preprocess_data(df, region):
 
     # content 빈 컬럼 추가
     df['content'] = ""
-    
-    # date 컬럼 형식 변경
-    def add_current_year(date_str):
-        try:
-            if date_str.startswith('작성일'):
-                return date_str.replace('작성일', '').strip()
-            
-            # 시간 정보만 있는 경우 처리
-            if len(date_str.split(':')) == 3:
-                current_date = datetime.now().strftime('%Y-%m-%d')
-                date_str = f"{current_date} {date_str}"
-                return pd.to_datetime(date_str, format='%Y-%m-%d %H:%M:%S', errors='coerce').strftime('%Y-%m-%d')
-
-            date = pd.to_datetime(date_str, format='%Y-%m-%d', errors='coerce')
-            if pd.isnull(date):
-                date = pd.to_datetime(date_str, format='%Y.%m.%d', errors='coerce')
-            if pd.isnull(date):
-            # "MM.DD" 형식 처리
-                if len(date_str.split('.')) == 2:
-                    current_year = datetime.now().year
-                    date = pd.to_datetime(f"{current_year}.{date_str}", format='%Y.%m.%d', errors='coerce')
-            if pd.isnull(date):
-                current_year = datetime.now().year
-                date = pd.to_datetime(f"{current_year}-{date_str}", format='%Y-%m-%d', errors='coerce')
-            return date.strftime('%Y-%m-%d')
-        except Exception:
-            return None
 
     df['date'] = df['date'].apply(add_current_year)
 
