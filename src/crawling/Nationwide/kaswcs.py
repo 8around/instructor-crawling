@@ -3,7 +3,9 @@ import re
 import sys
 import time
 sys.path.append('../..')
-from constants.index import real_keywords
+from constants.index import must_include_keyword
+from constants.index import must_not_include_keywords
+from constants.index import any_of_keywords
 from utils.index import get_soup
 from utils.index import get_date
 from utils.index import get_driver
@@ -94,7 +96,13 @@ try:
             post_list = extract_post_data(title, title.get('href'))
     
     post_list = [post for post in post_list if post[2] == str(get_date())]
-    post_link_filtered = [post for post in post_list if any(keyword in post[0] or keyword in post[1] for keyword in real_keywords)]
+    
+    post_link_filtered = [
+    post for post in post_list
+    if must_include_keyword in (post[0]) and 
+       any(keyword in (post[0]) for keyword in any_of_keywords) and 
+       not any(keyword in (post[0]) for keyword in must_not_include_keywords)
+]
 
     for post in post_link_filtered:
         print('지역:', post[4])

@@ -39,8 +39,8 @@ def fetch_data(api_keys, base_url, api_token):
 def preprocess_data(df, region):
     # 4번째 컬럼 삭제
     if df.shape[1] >= 4:
-        df = df.drop(df.columns[3], axis=1)
-    
+        df = df.iloc[:, :3]
+
     # 컬럼 이름 변경
     df.columns = ['title', 'link', 'date']
 
@@ -62,6 +62,11 @@ def preprocess_data(df, region):
             date = pd.to_datetime(date_str, format='%Y-%m-%d', errors='coerce')
             if pd.isnull(date):
                 date = pd.to_datetime(date_str, format='%Y.%m.%d', errors='coerce')
+            if pd.isnull(date):
+            # "MM.DD" 형식 처리
+                if len(date_str.split('.')) == 2:
+                    current_year = datetime.now().year
+                    date = pd.to_datetime(f"{current_year}.{date_str}", format='%Y.%m.%d', errors='coerce')
             if pd.isnull(date):
                 current_year = datetime.now().year
                 date = pd.to_datetime(f"{current_year}-{date_str}", format='%Y-%m-%d', errors='coerce')

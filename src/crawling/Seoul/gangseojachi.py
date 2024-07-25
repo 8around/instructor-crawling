@@ -11,7 +11,7 @@ from utils.index import get_date
 from utils.index import get_driver
 from utils.index import log_error_region
 
-detail_region = '강서구청'
+detail_region = '강서자치회관'
 
 contents = []
 
@@ -20,7 +20,7 @@ def get_html_tbody():
     driver = get_driver()
 
     # 크롤링할 웹 페이지 URL
-    url = "https://www.gangseo.seoul.kr/gs040302"
+    url = "https://jachi.gangseo.seoul.kr/cpage/board/cpageNewsList"
     
     try:
         # 웹 페이지 열기
@@ -36,15 +36,15 @@ def get_html_tbody():
 
         tbody_list.append(tbody1)
     
-        links = driver.find_elements(By.XPATH, '//a[contains(@onclick, "showDetail(this)")]') 
+        links = driver.find_elements(By.XPATH, "//a[contains(@href, 'javascript:goBoardView(')]")
 
         for i in range(10):    
-            links = driver.find_elements(By.XPATH, '//a[contains(@onclick, "showDetail(this)")]') 
+            links = driver.find_elements(By.XPATH, "//a[contains(@href, 'javascript:goBoardView(')]")
             links[i].click()
             time.sleep(3)
 
             soup2 = BeautifulSoup(driver.page_source, 'html.parser')
-            content = soup2.find('div', class_ = 'gosi-con')
+            content = soup2.find('section', class_ = 'view-cont')
             content = content.get_text("\n", strip=True)
             content = re.sub(r'\xa0', ' ', content) # 문자열에서 모든 \xa0 문자를 제거
             contents.append(content)
@@ -81,8 +81,8 @@ try:
     tbody_list = get_html_tbody()
 
     for tbody in tbody_list:
-        titles = tbody.select('tbody > tr > td.text-align.is-left > a')
-        dates = tbody.select(' tbody > tr > td:nth-child(5)')
+        titles = tbody.select('tbody > tr > td.link-in > a')
+        dates = tbody.select(' tbody > tr > td:nth-child(3)')
 
         for title, date in zip(titles, dates):
             post_list = extract_post_data(title, date)
@@ -103,6 +103,7 @@ try:
        any(keyword in (post[0]) for keyword in any_of_keywords) and 
        not any(keyword in (post[0]) for keyword in must_not_include_keywords)
 ]
+    
     for post in post_link_filtered:
         print('지역:', post[4])
         print('제목:', post[0])
