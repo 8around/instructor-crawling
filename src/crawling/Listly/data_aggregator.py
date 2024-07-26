@@ -12,7 +12,7 @@ load_dotenv()
 BASE_URL = os.getenv('BASE_URL')
 API_TOKEN = os.getenv('API_TOKEN')
 
-def add_current_year(date_str):
+def convert_date(date_str):
     try:
         if date_str.startswith('작성일'):
             return date_str.replace('작성일', '').strip()
@@ -96,7 +96,7 @@ def preprocess_data(df, region):
     # content 빈 컬럼 추가
     df['content'] = ""
 
-    df['date'] = df['date'].apply(add_current_year)
+    df['date'] = df['date'].apply(convert_date)
 
     # 컬럼 순서 변경
     df = df[['title', 'content', 'date', 'link']]
@@ -128,8 +128,9 @@ def extract_important_content(url):
     except Exception as e:
         return ""  # 예외 발생 시 빈 본문 반환
 
-combined_df = fetch_data(API_KEYS, BASE_URL, API_TOKEN)
 
+
+combined_df = fetch_data(API_KEYS, BASE_URL, API_TOKEN)
 
 # 결합된 데이터를 CSV 파일로 저장
 combined_df.to_csv('./result_combined.csv', index=False)
