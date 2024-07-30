@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import re
 import sys
 import time
-sys.path.append("../..")  # 상위 폴더로 경로 추가
+sys.path.append("../../..")  # 상위 폴더로 경로 추가
 from constants.index import must_include_keyword
 from constants.index import must_not_include_keywords
 from constants.index import any_of_keywords
