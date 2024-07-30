@@ -2,22 +2,25 @@ from bs4 import BeautifulSoup
 import re
 import sys
 import time
-sys.path.append("../..")  # 상위 폴더로 경로 추가
+from selenium.webdriver.common.by import By
+sys.path.append("../../..")  # 상위 폴더로 경로 추가
 from constants.index import must_include_keyword
 from constants.index import must_not_include_keywords
 from constants.index import any_of_keywords
-from utils.index import get_soup
 from utils.index import get_date
 from utils.index import get_driver
 from utils.index import log_error_region
 
-detail_region = '강북구가족센터'
+detail_region = '강서구청'
 
-def get_html_tbody(page_number = 1):
+contents = []
+
+def get_html_tbody():
     tbody_list = []
     driver = get_driver()
+
     # 크롤링할 웹 페이지 URL
-    url = "https://gangbuk.familynet.or.kr/center/lay1/bbs/S295T311C313/A/7/list.do?rows=10&cpage=1"
+    url = "https://www.gangseo.seoul.kr/gs040302"
     
     try:
         # 웹 페이지 열기
@@ -32,28 +35,25 @@ def get_html_tbody(page_number = 1):
         tbody1 = soup.find('tbody')
 
         tbody_list.append(tbody1)
-
-        if page_number != 1:
-            for i in range(2, page_number + 1):
-                # 원하는 링크 클릭 (예: 1페이지로 이동)
-                url = f"https://gangbuk.familynet.or.kr/center/lay1/bbs/S295T311C313/A/7/list.do?rows=10&cpage={i}"
-                driver.get(url)
-                
-                # 페이지 이동을 위해 잠시 대기 (로딩 완료를 기다리는 것이 좋음)
-                time.sleep(5)
-
-                # 현재 페이지의 HTML 코드를 가져옵니다.
-                page_source = driver.page_source
-
-                # BeautifulSoup으로 파싱
-                soup = BeautifulSoup(page_source, 'html.parser')
-
-                # tbody 요소 가져오기
-                tbody = soup.find('tbody')
-
-                # tbody1과 tbody2를 리스트에 저장
-                tbody_list.append(tbody)
     
+        links = driver.find_elements(By.XPATH, '//a[contains(@onclick, "showDetail(this)")]') 
+
+        for i in range(10):    
+            links = driver.find_elements(By.XPATH, '//a[contains(@onclick, "showDetail(this)")]') 
+            links[i].click()
+            time.sleep(3)
+
+            soup2 = BeautifulSoup(driver.page_source, 'html.parser')
+            content = soup2.find('div', class_ = 'gosi-con')
+            content = content.get_text("\n", strip=True)
+            content = re.sub(r'\xa0', ' ', content) # 문자열에서 모든 \xa0 문자를 제거
+            contents.append(content)
+
+            driver.back()
+
+            time.sleep(3)
+
+
     except Exception as e:
         print(f"{detail_region} 오류 발생: {e}")
 
@@ -61,47 +61,48 @@ def get_html_tbody(page_number = 1):
 
 post_list = []
 
-def extract_post_data(title, date, link):
+def extract_post_data(title, date):
     title_text = title.text.strip()
     match_title = re.search('(\S.*\S)', title_text)
 
     date_text = date.text.strip()  # 문자열 좌우 공백 제거
     match_date = re.search('\d{4}-\d{2}-\d{2}', date_text)
 
-    full_url = 'https://gangbuk.familynet.or.kr/center/lay1/bbs/S295T311C313/A/7/' + link
-
-    post = get_soup(full_url)
-    content = post.find('td', class_ = 'contents yui3-cssreset ck')
-    content = content.get_text("\n", strip=True)
-
     if match_title:
         title_text = match_title.group()
     if match_date:
         date_text = match_date.group()
 
-    post_list.append([title_text, content, date_text, full_url, detail_region])
+    post_list.append([title_text, date_text])
     
     return post_list
 
 try:
-    tbody_list = get_html_tbody(1)
+    tbody_list = get_html_tbody()
 
     for tbody in tbody_list:
-        titles = tbody.select('tbody > tr > td.tit.clearfix > a')
-        dates = tbody.select('tbody > tr > td.tit.clearfix > ul > li:nth-child(1) > span')
+        titles = tbody.select('tbody > tr > td.text-align.is-left > a')
+        dates = tbody.select(' tbody > tr > td:nth-child(5)')
 
         for title, date in zip(titles, dates):
-            post_list = extract_post_data(title, date, title.get('href'))
+            post_list = extract_post_data(title, date)
     
-    post_list = [post for post in post_list if post[2] == str(get_date())]
+    final_post_list = []
 
+    # post_list와 contents 리스트를 결합
+    for post, content in zip(post_list, contents):
+        title, date = post
+        link = ''
+        final_post_list.append([title, content, date, link, detail_region])
+
+    final_post_list = [post for post in final_post_list if post[2] == str(get_date())]
+    
     post_link_filtered = [
-    post for post in post_list
+    post for post in final_post_list
     if must_include_keyword in (post[0]) and 
        any(keyword in (post[0]) for keyword in any_of_keywords) and 
        not any(keyword in (post[0]) for keyword in must_not_include_keywords)
 ]
-
     for post in post_link_filtered:
         print('지역:', post[4])
         print('제목:', post[0])

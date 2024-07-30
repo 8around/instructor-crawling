@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import re
 import sys
 import time
-sys.path.append("../..")  # 상위 폴더로 경로 추가
+sys.path.append("../../..")  # 상위 폴더로 경로 추가
 from constants.index import must_include_keyword
 from constants.index import must_not_include_keywords
 from constants.index import any_of_keywords
@@ -11,13 +11,13 @@ from utils.index import get_date
 from utils.index import get_driver
 from utils.index import log_error_region
 
-detail_region = '강남문화재단'
+detail_region = '강북구가족센터'
 
 def get_html_tbody(page_number = 1):
     tbody_list = []
     driver = get_driver()
     # 크롤링할 웹 페이지 URL
-    url = "https://www.gangnam.go.kr/office/gfac/board/gfac_chargeteacher/list.do?mid=gfac_chargeTeacher&pgno=1&keyfield=BDM_MAIN_TITLE&keyword="
+    url = "https://gangbuk.familynet.or.kr/center/lay1/bbs/S295T311C313/A/7/list.do?rows=10&cpage=1"
     
     try:
         # 웹 페이지 열기
@@ -29,14 +29,14 @@ def get_html_tbody(page_number = 1):
         soup = BeautifulSoup(page1_source, 'html.parser')
 
         # tr 요소 가져오기
-        tbody1 = soup.find('tbody', class_ = 'grid')
+        tbody1 = soup.find('tbody')
 
         tbody_list.append(tbody1)
 
         if page_number != 1:
             for i in range(2, page_number + 1):
                 # 원하는 링크 클릭 (예: 1페이지로 이동)
-                url = f"https://www.gangnam.go.kr/office/gfac/board/gfac_chargeteacher/list.do?mid=gfac_chargeTeacher&pgno={i}&keyfield=BDM_MAIN_TITLE&keyword="
+                url = f"https://gangbuk.familynet.or.kr/center/lay1/bbs/S295T311C313/A/7/list.do?rows=10&cpage={i}"
                 driver.get(url)
                 
                 # 페이지 이동을 위해 잠시 대기 (로딩 완료를 기다리는 것이 좋음)
@@ -49,7 +49,7 @@ def get_html_tbody(page_number = 1):
                 soup = BeautifulSoup(page_source, 'html.parser')
 
                 # tbody 요소 가져오기
-                tbody = soup.find('tbody', class_ = 'grid')
+                tbody = soup.find('tbody')
 
                 # tbody1과 tbody2를 리스트에 저장
                 tbody_list.append(tbody)
@@ -68,10 +68,10 @@ def extract_post_data(title, date, link):
     date_text = date.text.strip()  # 문자열 좌우 공백 제거
     match_date = re.search('\d{4}-\d{2}-\d{2}', date_text)
 
-    full_url = 'https://www.gangnam.go.kr/' + link
+    full_url = 'https://gangbuk.familynet.or.kr/center/lay1/bbs/S295T311C313/A/7/' + link
 
     post = get_soup(full_url)
-    content = post.find('div', class_ = 'post-content')
+    content = post.find('td', class_ = 'contents yui3-cssreset ck')
     content = content.get_text("\n", strip=True)
 
     if match_title:
@@ -87,8 +87,8 @@ try:
     tbody_list = get_html_tbody(1)
 
     for tbody in tbody_list:
-        titles = tbody.select('tbody > tr > td.align-l.tit > a')
-        dates = tbody.select(' tbody > tr > td:nth-child(5)')
+        titles = tbody.select('tbody > tr > td.tit.clearfix > a')
+        dates = tbody.select('tbody > tr > td.tit.clearfix > ul > li:nth-child(1) > span')
 
         for title, date in zip(titles, dates):
             post_list = extract_post_data(title, date, title.get('href'))
@@ -101,7 +101,7 @@ try:
        any(keyword in (post[0]) for keyword in any_of_keywords) and 
        not any(keyword in (post[0]) for keyword in must_not_include_keywords)
 ]
-    
+
     for post in post_link_filtered:
         print('지역:', post[4])
         print('제목:', post[0])
