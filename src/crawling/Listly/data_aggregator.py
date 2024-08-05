@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import io
 import os
+import re
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from boilerpy3 import extractors
@@ -14,9 +15,15 @@ API_TOKEN = os.getenv('API_TOKEN')
 
 def convert_date(date_str):
     try:
-        if date_str.startswith('작성일'):
-            return date_str.replace('작성일', '').strip()
-        
+        if any(remove in date_str for remove in ['시간전', '작성일', '등록일']):
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            return current_date
+
+        # 우선적으로 YYYY-MM-DD 형식의 날짜가 포함되어 있는지 체크
+        match = re.search(r'\b(\d{4}-\d{2}-\d{2})\b', date_str)
+        if match:
+            return match.group(1)
+
         # 시간 정보만 있는 경우 처리
         if len(date_str.split(':')) == 3:
             current_date = datetime.now().strftime('%Y-%m-%d')
@@ -52,6 +59,7 @@ def convert_date(date_str):
             date = pd.to_datetime(f"{current_year}-{date_str}", format='%Y-%m-%d', errors='coerce')
 
         return date.strftime('%Y-%m-%d')
+    
     except Exception:
         return None
 
