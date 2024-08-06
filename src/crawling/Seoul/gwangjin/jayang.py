@@ -57,9 +57,10 @@ def extract_post_data(title, date, link):
     full_url = f'https://www.jayang.or.kr/main/sub.html?Mode=view&boardID=www21&num={num}&page=1&keyfield=subject&key=%EA%B0%95%EC%82%AC&bCate='
 
     try:
-        post = get_soup(full_url)
-        #content = post.find('html')
+        #post = get_soup(full_url)
+        #content = post.find_all('div', id_ = 'AB_viewContent')
         #content = content.get_text("\n", strip=True)
+        
         content = ''
         if match_title:
             title_text = match_title.group()
