@@ -12,7 +12,7 @@ from utils.index import get_date
 from utils.index import get_driver
 from utils.index import log_error_region
 
-detail_region = '관악문화재단'
+detail_region = '자양종합사회복지관'
 
 def get_html_tbody(page_number=1):
     tbody_list = []
