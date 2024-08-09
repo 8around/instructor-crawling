@@ -21,7 +21,10 @@ def convert_date(date_str):
 
         if '~' in date_str:
             date_str = date_str.split('~')[0].strip()
-            
+
+        if '/' in date_str:
+            date_str = date_str.split('/')[0].strip()
+
         # 우선적으로 YYYY-MM-DD 형식의 날짜가 포함되어 있는지 체크
         match = re.search(r'\b(\d{4}-\d{2}-\d{2})\b', date_str)
         if match:
