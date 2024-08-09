@@ -15,8 +15,11 @@ API_TOKEN = os.getenv('API_TOKEN')
 
 def convert_date(date_str):
     try:
+        date_str = str(date_str)
+        current_year = datetime.now().year
+        current_date = datetime.now().strftime('%Y-%m-%d')
+
         if any(remove in date_str for remove in ['시간전', '작성일', '등록일']):
-            current_date = datetime.now().strftime('%Y-%m-%d')
             return current_date
 
         if '~' in date_str:
@@ -24,15 +27,18 @@ def convert_date(date_str):
 
         if '/' in date_str:
             date_str = date_str.split('/')[0].strip()
-
+        
         # 우선적으로 YYYY-MM-DD 형식의 날짜가 포함되어 있는지 체크
         match = re.search(r'\b(\d{4}-\d{2}-\d{2})\b', date_str)
         if match:
             return match.group(1)
+        
+        if len(date_str.split('.')[0]) == 1:
+            date_str = f"{current_year}.{date_str}"
+            return pd.to_datetime(f"{date_str}", format='%Y.%m.%d', errors='coerce').strftime('%Y-%m-%d')
 
         # 시간 정보만 있는 경우 처리
         if len(date_str.split(':')) == 3:
-            current_date = datetime.now().strftime('%Y-%m-%d')
             date_str = f"{current_date} {date_str}"
             return pd.to_datetime(date_str, format='%Y-%m-%d %H:%M:%S', errors='coerce').strftime('%Y-%m-%d')
 
@@ -55,13 +61,11 @@ def convert_date(date_str):
                 date = pd.to_datetime(date_str, format='%Y-%m-%d', errors='coerce')
 
         if pd.isnull(date):
-            # "MM.DD" 형식 처리
-            if len(date_str.split('.')) == 2:
-                current_year = datetime.now().year
-                date = pd.to_datetime(f"{current_year}.{date_str}", format='%Y.%m.%d', errors='coerce')
+            if len(date_str.split('.')) == 2 and len(date_str.split('.')[0]) == 2:
+                date_str = f"{current_year}.{date_str}"
+                date = pd.to_datetime(date_str, format='%Y.%m.%d', errors='coerce')
 
         if pd.isnull(date):
-            current_year = datetime.now().year
             date = pd.to_datetime(f"{current_year}-{date_str}", format='%Y-%m-%d', errors='coerce')
 
         return date.strftime('%Y-%m-%d')
